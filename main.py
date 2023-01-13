@@ -22,7 +22,10 @@ FIREBASE_CONF_DATA = {
 
 REGISTRATION_TOKENS = [
     "cXnENuz5QcyKTwpRYidIXy:APA91bGNjj3xdULRNIB6AOXEbnXe8_Re3Q5OK6YaQ-_09K-pw98GLdTin9er25nv0QnShh9Jnu4jd_wbWaJK_e4MXqRGLolNk4AvlB_JnF8JvOuxTZMe7xK-ocs0vJXdGLrs77P1NY6Y",
+    "fSXzH6UhBRZeVQJQq1OOIM:APA91bFF5YLuSHZJzf10WvCDP_2_jLIdKym6dHchcfqpJPyiHGSU23ckOmUmR98Dzjf5-72zxrjM5OmTnp-RPULwCK8RkElknpEpn18yvYTvHzWnkRaLjVGI6XSp3G40X-wOszHAil71",
+    "dWeg2kd41ko0mOtA73AfEH:APA91bHaQwCwuQ0xfyGvAlG4vcO9LsYpojBMgj5XLiBSeUhgKBKOc2vbu7ccUiKLx6RUq6FQqt7hwDiekf7FFuLPnUicYFyF4NAJkAUatmjNb2IPv5vrgIc-IkGI0Nym3wWw-WSINPOC",
     "fSXzH6UhBRZeVQJQq1OOIM:APA91bFF5YLuSHZJzf10WvCDP_2_jLIdKym6dHchcfqpJPyiHGSU23ckOmUmR98Dzjf5-72zxrjM5OmTnp-RPULwCK8RkElknpEpn18yvYTvHzWnkRaLjVGI6XSp3G40X-wOszHAil71"
+    "fffSXzH6UhBRZeVQJQq1OOIM:APA91bFF5YLuSHZJzf10WvCDP_2_jLIdKym6dHchcfqpJPyiHGSU23ckOmUmR98Dzjf5-72zxrjM5OmTnp-RPULwCK8RkElknpEpn18yvYTvHzWnkRaLjVGI6XSp3G40X-wOszHAil71"
 ]
 
 
@@ -30,9 +33,13 @@ class SendPushNotifications:
 
     def __init__(self):
         cred = credentials.Certificate(FIREBASE_CONF_DATA)
-        default_app = firebase_admin.initialize_app(cred)
+        self.app = firebase_admin.initialize_app(cred)
 
-    def send_push(self):
+    def close_app(self):
+        firebase_admin.delete_app(self.app)
+
+    @staticmethod
+    def send_push():
         message = messaging.MulticastMessage(
             tokens=REGISTRATION_TOKENS,
             data={"score": "850", "time": "3:51"},
@@ -40,10 +47,14 @@ class SendPushNotifications:
         )
 
         response = messaging.send_multicast(message)
-        print(response.success_count)
-        print(response.failure_count)
+        for resp in response.responses:
+            print(resp.info)
+        print(f"SUCCESS: {response.success_count}")
+        print(f"FAILED:  {response.failure_count}")
         return response
 
 
 if __name__ == "__main__":
-    SendPushNotifications().send_push()
+    init_push = SendPushNotifications()
+    init_push.send_push()
+    init_push.close_app()
