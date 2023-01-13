@@ -31,8 +31,4 @@ class SendPushNotification:
         )
 
         response = messaging.send_multicast(message)
-        for resp in response.responses:
-            print(resp.info)
-        print(f"SUCCESS: {response.success_count}")
-        print(f"FAILED:  {response.failure_count}")
         return response.success_count, response.failure_count

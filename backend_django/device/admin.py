@@ -1,7 +1,19 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from .models import Device
+from .selectors import get_push_uids
+from .utils import SendPushNotification
+
+
+@admin.action(description="Send push notifications to all!")
+def send_push_to_all(_modeladmin, request, _queryset) -> None:
+    tokens = get_push_uids()
+    push_init = SendPushNotification(tokens=tokens)
+    success, failed = push_init.send_push()
+    push_init.close_app()
+
+    messages.success(request, f"Success: {success}, Failed: {failed}")
 
 
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
-    pass
+    actions = (send_push_to_all,)
