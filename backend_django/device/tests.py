@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from .models import Device
-from .services import add_device
+from .utils import add_device
 
 
 class TestDeviceModel(TestCase):
@@ -21,6 +21,7 @@ class TestDeviceModel(TestCase):
 
     def test_add_device_api_init(self):
         response = self.client.post(self.add_device_url, {})
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_device_api_ok(self):
