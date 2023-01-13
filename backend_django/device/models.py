@@ -3,7 +3,7 @@ import uuid
 
 
 class UuidAbstractModel(models.Model):
-    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4(), unique=True)
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_update = models.DateTimeField(auto_now=True)
 
