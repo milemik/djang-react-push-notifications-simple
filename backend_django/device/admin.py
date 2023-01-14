@@ -16,6 +16,7 @@ def send_push_to_all(_modeladmin, request, _queryset) -> None:
 
 @admin.action(description="Test send push notifications to all!")
 def dry_run_send_push_to_all(_modeladmin, request, _queryset) -> None:
+    """Users will not really receive notifications"""
     tokens = get_push_uids()
     push_init = SendPushNotification(tokens=tokens)
     success, failed = push_init.send_push(dry_run=True)

@@ -152,7 +152,7 @@ FIREBASE_CONF_DATA = {
     "client_x509_cert_url": os.getenv("CLIENT_X509_CERT_URL")
 }
 
-
+#  django-cors-headers settings
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = False
