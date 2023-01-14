@@ -18,6 +18,17 @@
 
 4. To see if app is running open url http://localhost:3000/
 
+## Set ENV
+
+For running this script you need some data from your Firebase project. Add this data to your ENVIRONMENT VARIABLES:
+```shell
+export PROJECT_ID=YOUR-FIREBASE-PROJECT-ID
+export PRIVATE_KEY_ID=YOUR-FIREBASE-PRIVATE-KEY-ID
+export PRIVATE_KEY=YOUR-FIREBASE-PRIVATE-KEY
+export CLIENT_EMAIL=YOUR-FIREBASE-CLIENT-EMAIL
+export CLIENT_ID=YOUR-FIREBASE-CLIENT-ID
+export CLIENT_X509_CERT_URL=YOUR-FIREBASE-CLIENT-CLIENT_X509_CERT_URL
+```
 
 ## Send notification using python script
 
