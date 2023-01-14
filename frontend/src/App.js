@@ -1,4 +1,4 @@
-import './messaging_init_in_sw';
+import './messaging_init_in_sw.js';
 
 function App() {
   return (
