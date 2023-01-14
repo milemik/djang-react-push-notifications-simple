@@ -14,6 +14,16 @@ def send_push_to_all(_modeladmin, request, _queryset) -> None:
     messages.success(request, f"Success: {success}, Failed: {failed}")
 
 
+@admin.action(description="Test send push notifications to all!")
+def dry_run_send_push_to_all(_modeladmin, request, _queryset) -> None:
+    tokens = get_push_uids()
+    push_init = SendPushNotification(tokens=tokens)
+    success, failed = push_init.send_push(dry_run=True)
+    push_init.close_app()
+
+    messages.success(request, f"Success: {success}, Failed: {failed}")
+
+
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
-    actions = (send_push_to_all,)
+    actions = (send_push_to_all, dry_run_send_push_to_all)

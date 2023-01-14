@@ -23,12 +23,13 @@ class SendPushNotification:
     def close_app(self) -> None:
         firebase_admin.delete_app(self.app)
 
-    def send_push(self) -> Tuple[int, int]:
+    def send_push(self, dry_run: bool = False) -> Tuple[int, int]:
+        notification = messaging.Notification(title="Hello test notification", body="Notification test")
         message = messaging.MulticastMessage(
             tokens=self.tokens,
             data={"score": "850", "time": "3:51"},
-            notification=messaging.Notification(title="Hello test notification", body="Notification test"),
+            notification=notification,
         )
 
-        response = messaging.send_multicast(message)
+        response = messaging.send_multicast(message, dry_run=dry_run)
         return response.success_count, response.failure_count
