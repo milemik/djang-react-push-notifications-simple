@@ -32,4 +32,13 @@ class SendPushNotification:
         )
 
         response = messaging.send_multicast(message, dry_run=dry_run)
+        print_responses_info(responses_returned=response)
+
         return response.success_count, response.failure_count
+
+
+def print_responses_info(responses_returned: firebase_admin.messaging.BatchResponse) -> None:
+    for r in responses_returned.responses:
+        print(r.exception)
+        print(r.message_id)
+        print(r.success)
