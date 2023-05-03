@@ -21,12 +21,12 @@ class TestDeviceModel(TestCase):
         self.assertEqual(Device.objects.count(), 1)
 
     def test_add_device_api_init(self):
-        response = self.client.post(self.add_device_url, {})
+        response = self.client.post(self.add_device_url, {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_device_api_ok(self):
-        response = self.client.post(self.add_device_url, {"push_uid": self.device_uid})
+        response = self.client.post(self.add_device_url, {"push_uid": self.device_uid}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
