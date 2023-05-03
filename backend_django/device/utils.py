@@ -1,3 +1,4 @@
+import asyncio
 from typing import List, Tuple
 
 from django.conf import settings
@@ -10,13 +11,14 @@ from .models import Device
 cred = credentials.Certificate(settings.FIREBASE_CONF_DATA)
 app = firebase_admin.initialize_app(cred)
 
+
 def add_device(device_uid: str) -> Device:
     device = Device(push_uid=device_uid)
     device.save()
     return device
 
 
-def send_push(tokens: List[str], dry_run: bool = False) -> Tuple[int, int]:
+async def send_push(tokens: List[str], dry_run: bool = False) -> None:
     notification = messaging.Notification(title="Hello test notification", body="Notification test")
     message = messaging.MulticastMessage(
         tokens=tokens,
@@ -24,10 +26,28 @@ def send_push(tokens: List[str], dry_run: bool = False) -> Tuple[int, int]:
         notification=notification,
     )
 
-    response = messaging.send_multicast(message, dry_run=dry_run)
-    print_responses_info(responses_returned=response)
+    messaging.send_multicast(message, dry_run=dry_run)
+    # print_responses_info(responses_returned=response)
+    #
+    # return response.success_count, response.failure_count
 
-    return response.success_count, response.failure_count
+
+def send_push_sync(tokens: List[str], dry_run: bool = False) -> None:
+    notification = messaging.Notification(title="Hello test notification", body="Notification test")
+    message = messaging.MulticastMessage(
+        tokens=tokens,
+        data={"score": "850", "time": "3:51"},
+        notification=notification,
+    )
+    messaging.send_multicast(message, dry_run=dry_run)
+
+
+async def send_to_many(tokens: list[str]) -> None:
+    tasks = set()
+    for token in tokens:
+        task = asyncio.create_task(send_push(tokens=[token]))
+        tasks.add(task)
+    await asyncio.gather(*tasks)
 
 
 def print_responses_info(responses_returned: firebase_admin.messaging.BatchResponse) -> None:
