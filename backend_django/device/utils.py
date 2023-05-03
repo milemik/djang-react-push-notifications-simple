@@ -7,6 +7,8 @@ from firebase_admin import credentials, messaging
 
 from .models import Device
 
+cred = credentials.Certificate(settings.FIREBASE_CONF_DATA)
+app = firebase_admin.initialize_app(cred)
 
 def add_device(device_uid: str) -> Device:
     device = Device(push_uid=device_uid)
@@ -14,27 +16,18 @@ def add_device(device_uid: str) -> Device:
     return device
 
 
-class SendPushNotification:
-    def __init__(self, tokens: List[str]) -> None:
-        cred = credentials.Certificate(settings.FIREBASE_CONF_DATA)
-        self.app = firebase_admin.initialize_app(cred)
-        self.tokens = tokens
+def send_push(tokens: List[str], dry_run: bool = False) -> Tuple[int, int]:
+    notification = messaging.Notification(title="Hello test notification", body="Notification test")
+    message = messaging.MulticastMessage(
+        tokens=tokens,
+        data={"score": "850", "time": "3:51"},
+        notification=notification,
+    )
 
-    def close_app(self) -> None:
-        firebase_admin.delete_app(self.app)
+    response = messaging.send_multicast(message, dry_run=dry_run)
+    print_responses_info(responses_returned=response)
 
-    def send_push(self, dry_run: bool = False) -> Tuple[int, int]:
-        notification = messaging.Notification(title="Hello test notification", body="Notification test")
-        message = messaging.MulticastMessage(
-            tokens=self.tokens,
-            data={"score": "850", "time": "3:51"},
-            notification=notification,
-        )
-
-        response = messaging.send_multicast(message, dry_run=dry_run)
-        print_responses_info(responses_returned=response)
-
-        return response.success_count, response.failure_count
+    return response.success_count, response.failure_count
 
 
 def print_responses_info(responses_returned: firebase_admin.messaging.BatchResponse) -> None:
