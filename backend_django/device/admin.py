@@ -42,6 +42,11 @@ def send_push_aiohttp_admin(_modeladmin, request, _queryset) -> None:
     send_push_aiohttp_task.delay()
 
 
+@admin.action(description="Send push aiohttp V1")
+def send_push_aiohttp_admin_v1(_modeladmin, request, _queryset) -> None:
+    send_push_aiohttp_task.delay()
+
+
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
     actions = (
@@ -50,5 +55,6 @@ class DeviceAdmin(admin.ModelAdmin):
         send_push_task_async,
         send_push_task_sync,
         send_push_request,
-        send_push_aiohttp_admin
+        send_push_aiohttp_admin,
+        send_push_aiohttp_admin_v1
     )
