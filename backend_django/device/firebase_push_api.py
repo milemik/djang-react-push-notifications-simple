@@ -77,14 +77,15 @@ async def send_push_many_aiohttp_v1(tokens: list[str]) -> None:
     :param tokens: list of device tokens
     """
     tasks = set()
-    access_token = get_access_token()
+    access_token = await get_access_token()
+    print(access_token)
     for token in tokens:
         task = asyncio.create_task(send_push_aiohttp_v1(token=token, access_token=access_token))
         tasks.add(task)
     await asyncio.gather(*tasks)
 
 
-def get_access_token() -> str:
+async def get_access_token() -> str:
     """
     Create access token for HTTP_V1 - API call
     https://googleapis.dev/python/google-auth/latest/user-guide.html#service-account-private-key-files
