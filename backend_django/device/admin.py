@@ -1,35 +1,20 @@
-from django.contrib import admin, messages
+from django.contrib import admin
+
 from .models import Device
-from .selectors import get_push_uids
-from .tasks import first_task_async, first_task_sync, send_push_request_task, send_push_aiohttp_task
-from .utils import send_push
+from .tasks import first_task_sync, send_push_request_task, send_push_aiohttp_task, send_push_aiohttp_task_legacy, \
+    send_fb_push_async
 
 
-@admin.action(description="Send push notifications to all!")
-def send_push_to_all(_modeladmin, request, _queryset) -> None:
-    tokens = get_push_uids()
-    success, failed = send_push(dry_run=True, tokens=tokens)
-
-    messages.success(request, f"Success: {success}, Failed: {failed}")
-
-
-@admin.action(description="Test send push notifications to all!")
-def dry_run_send_push_to_all(_modeladmin, request, _queryset) -> None:
-    """Users will not really receive notifications"""
-    tokens = get_push_uids()
-    success, failed = send_push(dry_run=True, tokens=tokens)
-
-    messages.success(request, f"Success: {success}, Failed: {failed}")
-
-
-@admin.action(description="Celery task ASYNC")
-def send_push_task_async(_modeladmin, request, _queryset) -> None:
-    first_task_async.delay()
-
-
-@admin.action(description="Celery task sync")
+@admin.action(description="Celery task FB sync")
 def send_push_task_sync(_modeladmin, request, _queryset) -> None:
     first_task_sync.delay()
+
+
+@admin.action(description="Celery task FB ASYNC")
+def send_push_task_async(_modeladmin, request, _queryset) -> None:
+    send_fb_push_async.delay()
+
+
 
 
 @admin.action(description="Send push request")
@@ -39,7 +24,7 @@ def send_push_request(_modeladmin, request, _queryset) -> None:
 
 @admin.action(description="Send push aiohttp")
 def send_push_aiohttp_admin(_modeladmin, request, _queryset) -> None:
-    send_push_aiohttp_task.delay()
+    send_push_aiohttp_task_legacy.delay()
 
 
 @admin.action(description="Send push aiohttp V1")
@@ -50,10 +35,8 @@ def send_push_aiohttp_admin_v1(_modeladmin, request, _queryset) -> None:
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
     actions = (
-        send_push_to_all,
-        dry_run_send_push_to_all,
-        send_push_task_async,
         send_push_task_sync,
+        send_push_task_async,
         send_push_request,
         send_push_aiohttp_admin,
         send_push_aiohttp_admin_v1

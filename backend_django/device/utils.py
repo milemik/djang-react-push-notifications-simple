@@ -17,21 +17,7 @@ def add_device(device_uid: str) -> Device:
     return device
 
 
-async def send_push(tokens: List[str], dry_run: bool = False) -> None:
-    notification = messaging.Notification(title="Hello test notification", body="Notification test")
-    message = messaging.MulticastMessage(
-        tokens=tokens,
-        data={"score": "850", "time": "3:51"},
-        notification=notification,
-    )
-
-    response = messaging.send_multicast(message, dry_run=dry_run)
-    print_responses_info(responses_returned=response)
-
-    # return response.success_count, response.failure_count
-
-
-def send_push_sync(tokens: List[str], dry_run: bool = False) -> None:
+def send_push_sync(tokens: List[str], dry_run: bool = False) -> tuple[int, int]:
     notification = messaging.Notification(title="Hello test notification", body="Notification test")
     message = messaging.MulticastMessage(
         tokens=tokens,
@@ -39,17 +25,28 @@ def send_push_sync(tokens: List[str], dry_run: bool = False) -> None:
         notification=notification,
     )
     response = messaging.send_multicast(message, dry_run=dry_run)
-    print_responses_info(responses_returned=response)
+    return response.success_count, response.failure_count
 
 
-async def send_to_many(tokens: list[str]) -> None:
+async def send_fb_push_async(tokens: List[str], dry_run: bool = False) -> None:
+    res = await send_push_sync(tokens=tokens, dry_run=dry_run)
+    print(res)
+
+
+async def send_fb_async_many(tokens: list[str]) -> None:
+    max_batch_size = 500  # max batch size can be up to 500
+    tokens_batch = []
     tasks = set()
     for token in tokens:
-        task = asyncio.create_task(send_push(tokens=[token]))
-        tasks.add(task)
-    await asyncio.gather(*tasks)
+        tokens_batch.append(token)
+        if len(tokens_batch) >= max_batch_size:
+            task = await asyncio.create_task(send_fb_push_async(tokens=tokens_batch))
+            tasks.add(task)
+            tokens_batch.clear()
+    # await asyncio.gather(*tasks)
 
 
 def print_responses_info(responses_returned: firebase_admin.messaging.BatchResponse) -> None:
+    """Information that we can see from send_multicast message - sending batch"""
     for r in responses_returned.responses:
         print(f"EXCEPTION: {r.exception}\nMESSAGE ID: {r.message_id}MESSAGE SENT: {r.success}")

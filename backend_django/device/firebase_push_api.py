@@ -3,6 +3,7 @@ import asyncio
 import aiohttp
 import google.auth.transport.requests
 import requests
+from aiohttp import ClientSession
 from django.conf import settings
 from google.oauth2 import service_account
 
@@ -30,9 +31,7 @@ async def send_push_aiohttp(tokens: list[str]):
     message_data = {"body": "Test", "title": "Test title"}
     payload = {"registration_ids": tokens, "data": message_data}
     async with aiohttp.ClientSession() as session:
-        async with session.post(url=url, json=payload, headers=header) as resp:
-            response = await resp.json()
-        print(response)
+        await session.post(url=url, json=payload, headers=header)
 
 
 async def send_push_aiohttp_v1(token: str, access_token: str):
@@ -49,9 +48,7 @@ async def send_push_aiohttp_v1(token: str, access_token: str):
     message_data = {"body": "Test", "title": "Test title"}
     payload = {"message": {"token": token, "data": message_data}}
     async with aiohttp.ClientSession() as session:
-        async with session.post(url=url_v1, json=payload, headers=header) as resp:
-            response = await resp.json()
-        print(response)
+        await session.post(url=url_v1, json=payload, headers=header)
 
 
 async def send_push_many_aiohttp(tokens: list[str]) -> None:
@@ -59,33 +56,31 @@ async def send_push_many_aiohttp(tokens: list[str]) -> None:
     ASYNC function to send multiple push notifications
     :param tokens: list of device tokens
     """
-    max_batch_size = 100  # Batch size can be up to 1000
-    tasks = set()
+    max_batch_size = 500  # Batch size can be up to 1000
     token_batch = []
     for token in tokens:
-        token_batch += token
+        token_batch.append(token)
         if len(token_batch) >= max_batch_size:
-            task = asyncio.create_task(send_push_aiohttp(tokens=token_batch))
-            tasks.add(task)
+            await asyncio.create_task(send_push_aiohttp(tokens=token_batch))
             token_batch.clear()
-    await asyncio.gather(*tasks)
 
 
 async def send_push_many_aiohttp_v1(tokens: list[str]) -> None:
     """
     ASYNC function to send multiple push notifications
     :param tokens: list of device tokens
+    NOTE: No batches possible
     """
     tasks = set()
-    access_token = await get_access_token()
-    print(access_token)
+    access_token = get_access_token()
+    # print(access_token)
     for token in tokens:
         task = asyncio.create_task(send_push_aiohttp_v1(token=token, access_token=access_token))
         tasks.add(task)
-    await asyncio.gather(*tasks)
+    res = await asyncio.gather(*tasks)
+    print(res)
 
-
-async def get_access_token() -> str:
+def get_access_token() -> str:
     """
     Create access token for HTTP_V1 - API call
     https://googleapis.dev/python/google-auth/latest/user-guide.html#service-account-private-key-files

@@ -4,21 +4,39 @@ from celery import shared_task
 
 from .firebase_push_api import send_push_request, send_push_many_aiohttp, send_push_many_aiohttp_v1
 from .selectors import get_push_uids
-from .utils import send_to_many, send_push_sync
-
-
-@shared_task
-def first_task_async():
-    tokens = get_push_uids()
-    asyncio.run(send_to_many(tokens=tokens))
+from .utils import send_push_sync, send_fb_async_many
 
 
 @shared_task
 def first_task_sync():
-    tokens = get_push_uids()
+    tokens = get_push_uids() * 1000
+    tokens_batch = []
+    batch_size = 500  # batch size can be up to 500
     for token in tokens:
-        send_push_sync(tokens=[token])
-    return "SYNC FINISHED!"
+        tokens_batch.append(token)
+        if len(tokens_batch) >= batch_size:
+            send_push_sync(tokens=tokens_batch)
+            tokens_batch.clear()
+    return "sync finished"
+
+
+@shared_task
+def send_fb_push_async():
+    tokens = get_push_uids() * 1000  # 2*1000
+    asyncio.run(send_fb_async_many(tokens=tokens))
+
+
+@shared_task
+def first_task_sync():
+    tokens = get_push_uids() * 1000
+    tokens_batch = []
+    batch_size = 500  # batch size can be up to 500
+    for token in tokens:
+        tokens_batch.append(token)
+        if len(tokens_batch) >= batch_size:
+            send_push_sync(tokens=tokens_batch)
+            tokens_batch.clear()
+    return "sync finished"
 
 
 @shared_task
@@ -30,12 +48,12 @@ def send_push_request_task():
 
 
 @shared_task
-def send_push_aiohttp_task():
-    tokens = get_push_uids()
+def send_push_aiohttp_task_legacy():
+    tokens = get_push_uids() * 1000
     asyncio.run(send_push_many_aiohttp(tokens=tokens))
 
 
 @shared_task
 def send_push_aiohttp_task():
-    tokens = get_push_uids() * 100
+    tokens = get_push_uids() * 1000
     asyncio.run(send_push_many_aiohttp_v1(tokens=tokens))
