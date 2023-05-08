@@ -104,11 +104,10 @@ def send_message_to_topic(topic_name: str) -> str:
     :param string topic_name: Topic name
     """
     # See documentation on defining a message payload.
+    notification = messaging.Notification(title="Hello test notification", body="Notification test")
     message = messaging.Message(
-        data={
-            'score': '850',
-            'time': '2:45',
-        },
+        data={"score": "850", "time": "3:51"},
+        notification=notification,
         topic=topic_name,
     )
     # Send a message to the devices subscribed to the provided topic.
