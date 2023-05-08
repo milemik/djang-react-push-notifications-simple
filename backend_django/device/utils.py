@@ -6,6 +6,9 @@ from django.conf import settings
 from firebase_admin import credentials, messaging
 
 from .models import Device
+import logging
+
+logger = logging.getLogger(__name__)
 
 cred = credentials.Certificate(settings.FIREBASE_CONF_DATA)
 app = firebase_admin.initialize_app(cred)
@@ -60,7 +63,7 @@ async def send_fb_async_many(tokens: list[str]) -> None:
 def print_responses_info(responses_returned: firebase_admin.messaging.BatchResponse) -> None:
     """Information that we can see from send_multicast message - sending batch"""
     for r in responses_returned.responses:
-        print(f"EXCEPTION: {r.exception}\nMESSAGE ID: {r.message_id}MESSAGE SENT: {r.success}")
+        logger.info(f"EXCEPTION: {r.exception}\nMESSAGE ID: {r.message_id}MESSAGE SENT: {r.success}")
 
 
 def subscribe_to_topic(topic_name: str, tokens: list[str]) -> int:

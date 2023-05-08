@@ -6,6 +6,10 @@ from .tasks import first_task_sync, send_push_request_task, send_push_aiohttp_ta
     send_fb_push_async, send_push_aiohttp_v1_group_task
 from .utils import subscribe_to_topic, TOPIC_NAME, unsubscribe_to_topic, send_message_to_topic
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 @admin.action(description="Celery task FB sync")
 def send_push_task_sync(_modeladmin, request, _queryset) -> None:
@@ -40,17 +44,15 @@ def send_group_push_v1(_modeladmin, request, _queryest) -> None:
 @admin.action(description="Subscribe to topic")
 def subscribe_to_topic_action(_modelamin, request, queryset: "QuerySet[Device]") -> None:
     device_tokens = list(queryset.values_list("push_uid", flat=True))
-    print(device_tokens)
     success_count = subscribe_to_topic(tokens=device_tokens, topic_name=TOPIC_NAME)
-    print(success_count)
+    logger.info(f"subscribe_to_topic_action: {success_count}")
 
 
 @admin.action(description="Unsubscribe to topic")
 def unsubscribe_to_topic_action(_modelamin, request, queryset: "QuerySet[Device]") -> None:
     device_tokens = list(queryset.values_list("push_uid", flat=True))
-    print(device_tokens)
     success_count = unsubscribe_to_topic(tokens=device_tokens, topic_name=TOPIC_NAME)
-    print(success_count)
+    logger.info(f"unsubscribe_to_topic_action: {success_count}")
 
 
 @admin.action(description="Send message to topic")

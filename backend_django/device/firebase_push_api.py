@@ -6,6 +6,10 @@ import requests
 from django.conf import settings
 from google.oauth2 import service_account
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 SCOPES = ["https://www.googleapis.com/auth/firebase.messaging", "https://www.googleapis.com/auth/cloud-platform"]
 
 
@@ -70,7 +74,7 @@ async def send_push_aiohttp_v1_group(tokens: list[str]):
             task = asyncio.create_task(session.post(url=url_v1, json=payload, headers=header))
             tasks.add(task)
         result = await asyncio.gather(*tasks)
-        print(result)
+        logger.info(f"send_push_aiohttp_v1_group: {result}")
     return result
 
 
@@ -101,7 +105,8 @@ async def send_push_many_aiohttp_v1(tokens: list[str]) -> None:
         task = asyncio.create_task(send_push_aiohttp_v1(token=token, access_token=access_token))
         tasks.add(task)
     res = await asyncio.gather(*tasks)
-    print(res)
+    logger.info(f"send_push_many_aiohttp_v1: {res}")
+
 
 def get_access_token() -> str:
     """
