@@ -2,7 +2,8 @@ import asyncio
 
 from celery import shared_task
 
-from .firebase_push_api import send_push_request, send_push_many_aiohttp, send_push_many_aiohttp_v1
+from .firebase_push_api import send_push_request, send_push_many_aiohttp, send_push_many_aiohttp_v1, \
+    send_push_aiohttp_v1_group
 from .selectors import get_push_uids
 from .utils import send_push_sync, send_fb_async_many
 
@@ -57,3 +58,9 @@ def send_push_aiohttp_task_legacy():
 def send_push_aiohttp_task():
     tokens = get_push_uids() * 1000
     asyncio.run(send_push_many_aiohttp_v1(tokens=tokens))
+
+
+@shared_task
+def send_push_aiohttp_v1_group_task():
+    tokens = get_push_uids() * 100
+    asyncio.run(send_push_aiohttp_v1_group(tokens=tokens))

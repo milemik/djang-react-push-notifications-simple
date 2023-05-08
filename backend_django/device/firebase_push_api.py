@@ -3,7 +3,6 @@ import asyncio
 import aiohttp
 import google.auth.transport.requests
 import requests
-from aiohttp import ClientSession
 from django.conf import settings
 from google.oauth2 import service_account
 
@@ -49,6 +48,30 @@ async def send_push_aiohttp_v1(token: str, access_token: str):
     payload = {"message": {"token": token, "data": message_data}}
     async with aiohttp.ClientSession() as session:
         await session.post(url=url_v1, json=payload, headers=header)
+
+
+async def send_push_aiohttp_v1_group(tokens: list[str]):
+    """
+    Send Firebase push notifications using HTTP_V1 - new suggested mode
+    more info here: https://firebase.google.com/docs/cloud-messaging/migrate-v1
+
+    NOTE: HTTP_V1 don't support sending group messages
+    """
+    project_id = settings.FIREBASE_PROJECT_ID
+    url_v1 = f"https://fcm.googleapis.com/v1/projects/{project_id}/messages:send"
+    push_secret_v1 = get_access_token()
+    header = {"Authorization": f"Bearer {push_secret_v1}", "Content-Type": "application/json"}
+    message_data = {"body": "Test", "title": "Test title"}
+
+    tasks = set()
+    async with aiohttp.ClientSession() as session:
+        for token in tokens:
+            payload = {"message": {"token": token, "data": message_data}}
+            task = asyncio.create_task(session.post(url=url_v1, json=payload, headers=header))
+            tasks.add(task)
+        result = await asyncio.gather(*tasks)
+        print(result)
+    return result
 
 
 async def send_push_many_aiohttp(tokens: list[str]) -> None:
