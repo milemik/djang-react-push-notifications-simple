@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    entrypoint:
+      - "python"
+      - "manage.py"
+      - "runserver"
+      - "0.0.0.0:8000"
+  celery:
+    build:
+      dockerfile: Dockerfile
+    entrypoint:
+      - "celery"
+      - "-A"
+      - "core"
+      - "worker"
+      - "-l"
+      - "INFO"
+    depends_on:
+      - redis
+  redis:
+    restart: unless-stopped
+    image: redis:7.0.11-alpine
+    expose:
+      - 6379

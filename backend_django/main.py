@@ -2,10 +2,11 @@ import os
 
 import firebase_admin
 from firebase_admin import messaging, credentials
+import environ
 
-from dotenv import load_dotenv
+env = environ.Env()
 
-load_dotenv()
+environ.Env.read_env(os.path.join(os.getcwd(), ".env"))
 
 FIREBASE_CONF_DATA = {
     "type": "service_account",
@@ -42,8 +43,6 @@ class SendPushNotifications:
         )
 
         response = messaging.send_multicast(message)
-        for resp in response.responses:
-            print(resp.info)
         print(f"SUCCESS: {response.success_count}")
         print(f"FAILED:  {response.failure_count}")
         return response

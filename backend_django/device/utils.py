@@ -1,11 +1,19 @@
-from typing import List, Tuple
-
-from django.conf import settings
+import asyncio
+from typing import List
 
 import firebase_admin
+from django.conf import settings
 from firebase_admin import credentials, messaging
 
 from .models import Device
+import logging
+
+logger = logging.getLogger(__name__)
+
+cred = credentials.Certificate(settings.FIREBASE_CONF_DATA)
+app = firebase_admin.initialize_app(cred)
+
+TOPIC_NAME = "testtop"
 
 
 def add_device(device_uid: str) -> Device:
@@ -14,31 +22,108 @@ def add_device(device_uid: str) -> Device:
     return device
 
 
-class SendPushNotification:
-    def __init__(self, tokens: List[str]) -> None:
-        cred = credentials.Certificate(settings.FIREBASE_CONF_DATA)
-        self.app = firebase_admin.initialize_app(cred)
-        self.tokens = tokens
+def send_push_sync(tokens: List[str], dry_run: bool = False) -> tuple[int, int]:
+    notification = messaging.Notification(title="Hello test notification", body="Notification test")
+    message = messaging.MulticastMessage(
+        tokens=tokens,
+        data={"score": "850", "time": "3:51"},
+        notification=notification,
+    )
+    response = messaging.send_multicast(message, dry_run=dry_run)
+    return response.success_count, response.failure_count
 
-    def close_app(self) -> None:
-        firebase_admin.delete_app(self.app)
 
-    def send_push(self, dry_run: bool = False) -> Tuple[int, int]:
-        notification = messaging.Notification(title="Hello test notification", body="Notification test")
-        message = messaging.MulticastMessage(
-            tokens=self.tokens,
-            data={"score": "850", "time": "3:51"},
-            notification=notification,
-        )
+async def send_push_async(tokens: List[str], dry_run: bool = False) -> tuple[int, int]:
+    notification = messaging.Notification(title="Hello test notification", body="Notification test")
+    message = messaging.MulticastMessage(
+        tokens=tokens,
+        data={"score": "850", "time": "3:51"},
+        notification=notification,
+    )
+    response = messaging.send_multicast(message, dry_run=dry_run)
+    return response.success_count, response.failure_count
 
-        response = messaging.send_multicast(message, dry_run=dry_run)
-        print_responses_info(responses_returned=response)
 
-        return response.success_count, response.failure_count
+async def send_fb_push_async(tokens: List[str], dry_run: bool = False) -> None:
+    await send_push_async(tokens=tokens, dry_run=dry_run)
+
+
+async def send_fb_async_many(tokens: list[str]) -> None:
+    max_batch_size = 500  # max batch size can be up to 500
+    tokens_batch = []
+    tasks = set()
+    for token in tokens:
+        tokens_batch.append(token)
+        if len(tokens_batch) >= max_batch_size:
+            task = await asyncio.create_task(send_fb_push_async(tokens=tokens_batch))
+            tasks.add(task)
+            tokens_batch.clear()
 
 
 def print_responses_info(responses_returned: firebase_admin.messaging.BatchResponse) -> None:
+    """Information that we can see from send_multicast message - sending batch"""
     for r in responses_returned.responses:
-        print(r.exception)
-        print(r.message_id)
-        print(r.success)
+        logger.info(f"EXCEPTION: {r.exception}\nMESSAGE ID: {r.message_id}MESSAGE SENT: {r.success}")
+
+
+def subscribe_to_topic(topic_name: str, tokens: list[str]) -> int:
+    """
+    Subscribe devices to topics
+
+    :param topic_name: Topic name - str
+    :param tokens: List of device tokens to subscribe - list[str]
+
+    https://firebase.google.com/docs/cloud-messaging/manage-topics
+
+    NOTE: we can subscribe up to 1000 devices in one call
+    https://firebase.google.com/docs/reference/admin/python/firebase_admin.messaging#topicmanagementresponse
+    """
+    tokens_check(tokens=tokens)
+    response = messaging.subscribe_to_topic(tokens=tokens, topic=topic_name)
+    return response.success_count
+
+
+def unsubscribe_to_topic(topic_name: str, tokens: list[str]) -> int:
+    """
+    Unsubscribe devices to topics
+
+    :param topic_name: Topic name - str
+    :param tokens: List of device tokens to subscribe - list[str]
+
+    https://firebase.google.com/docs/cloud-messaging/manage-topics
+
+    NOTE: we can unsubscribe up to 1000 devices in one call
+    https://firebase.google.com/docs/reference/admin/python/firebase_admin.messaging#topicmanagementresponse
+    """
+    tokens_check(tokens=tokens)
+    response = messaging.unsubscribe_from_topic(tokens=tokens, topic=topic_name)
+    return response.success_count
+
+
+def send_message_to_topic(topic_name: str) -> str:
+    """
+    Send message to topic
+    https://firebase.google.com/docs/cloud-messaging/send-message
+
+    :param string topic_name: Topic name
+    """
+    # See documentation on defining a message payload.
+    notification = messaging.Notification(title="Hello test notification", body="Notification test")
+    message = messaging.Message(
+        data={"score": "850", "time": "3:51"},
+        notification=notification,
+        topic=topic_name,
+    )
+    # Send a message to the devices subscribed to the provided topic.
+    response = messaging.send(message)
+    # Response is a message ID string.
+    return response
+
+
+def tokens_check(tokens: list[str]) -> None:
+    """
+    Here we can do all checks needed before sending subscribe call to Firebase
+    :param tokens: List of device tokens
+    """
+    if len(tokens) > 1000:
+        raise "Cant subscribe to more than 1000 tokens"
