@@ -186,3 +186,17 @@ CELERY_RESULT_BACKEND = "redis://redis:6379/0"
 PUSH_SECRET_KEY = os.getenv("PUSH_SECRET_KEY", "")
 PUSH_SECRET_KEY_V1 = os.getenv("FIREBASE_PUSH_V1_SECRET", "")
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}

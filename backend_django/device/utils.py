@@ -76,7 +76,9 @@ def subscribe_to_topic(topic_name: str, tokens: list[str]) -> int:
     https://firebase.google.com/docs/cloud-messaging/manage-topics
 
     NOTE: we can subscribe up to 1000 devices in one call
+    https://firebase.google.com/docs/reference/admin/python/firebase_admin.messaging#topicmanagementresponse
     """
+    tokens_check(tokens=tokens)
     response = messaging.subscribe_to_topic(tokens=tokens, topic=topic_name)
     return response.success_count
 
@@ -91,7 +93,9 @@ def unsubscribe_to_topic(topic_name: str, tokens: list[str]) -> int:
     https://firebase.google.com/docs/cloud-messaging/manage-topics
 
     NOTE: we can unsubscribe up to 1000 devices in one call
+    https://firebase.google.com/docs/reference/admin/python/firebase_admin.messaging#topicmanagementresponse
     """
+    tokens_check(tokens=tokens)
     response = messaging.unsubscribe_from_topic(tokens=tokens, topic=topic_name)
     return response.success_count
 
@@ -116,3 +120,10 @@ def send_message_to_topic(topic_name: str) -> str:
     return response
 
 
+def tokens_check(tokens: list[str]) -> None:
+    """
+    Here we can do all checks needed before sending subscribe call to Firebase
+    :param tokens: List of device tokens
+    """
+    if len(tokens) > 1000:
+        raise "Cant subscribe to more than 1000 tokens"

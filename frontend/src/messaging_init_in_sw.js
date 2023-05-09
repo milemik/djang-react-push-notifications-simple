@@ -1,13 +1,16 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken } from "firebase/messaging";
 
+console.log(process.env.REACT_APP_FB_API_KEY);
+
 const firebaseConfig = {
-    apiKey: "AIzaSyDTx8SGRHbE00njG_RfOIP6n0ZENEVzLmQ",
-    authDomain: "mytestproject-9b39f.firebaseapp.com",
-    projectId: "mytestproject-9b39f",
-    storageBucket: "mytestproject-9b39f.appspot.com",
-    messagingSenderId: "363755251159",
-    appId: "1:363755251159:web:69b6fa8b98258681281792"
+  apiKey: process.env.REACT_APP_FB_API_KEY,
+  authDomain: `${process.env.REACT_APP_FB_PROJECT_ID}.firebaseapp.com`,
+  projectId: process.env.REACT_APP_FB_PROJECT_ID,
+  storageBucket: `${process.env.REACT_APP_FB_PROJECT_ID}.appspot.com`,
+  messagingSenderId: process.env.REACT_APP_FB_SENDER_ID,
+  appId: process.env.REACT_APP_FB_APP_ID,
+  measurementId: process.env.REACT_APP_FB_MANAGEMENT_ID,
 };
 
 function requestPermission() {
@@ -20,7 +23,7 @@ function requestPermission() {
             const messaging = getMessaging(app);
             getToken(messaging, {
                 vapidKey:
-                    "BC7HBEUsioUTzjSKeifDTWVvz6y_5RpYy1Z5ArJLdGZ71UZC6DvWsiVnD-q1ZlqZeMr57aE9EPZ0pDCvShVbhHE",
+                    "BBGHDrt4NKEqZRYRkdRXjeGrcjxMbBt3kMDw0W0eRW-1AV5kga73-EODnRy8c-jurTz2YJUlvzWcVo9__tydfHo",
             }).then((currentToken) => {
                 if (currentToken) {
                     postData('http://localhost:8000/add_device/', { push_uid: currentToken })
